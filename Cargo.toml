@@ -1,0 +1,20 @@
+[package]
+name = "haskell_rust"
+version = "0.1.0"
+authors = ["Brian Teague <br.teague@gmail.com>"]
+edition = "2021"
+
+[lib]
+name = "haskell_lib"
+path = "lib/haskell.rs"
+
+[[bin]]
+name = "haskell_repl"
+path = "repl/main.rs"
+
+[[bin]]
+name = "haskell_exe"
+path = "src/main.rs"
+
+[dependencies]
+nom = "^7.1.3"
