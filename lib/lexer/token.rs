@@ -1,6 +1,8 @@
+#[derive(Debug, PartialEq)]
 pub enum Token {
     Num,
     Plus,
+    EOF,
 }
 
 pub struct Tokens<'a> {
