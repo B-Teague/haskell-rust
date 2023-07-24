@@ -1,12 +1,13 @@
 #[derive(Debug, PartialEq)]
-pub enum Token {
-    Num,
+pub enum Token<'a> {
+    Num(&'a str),
     Plus,
+    Minus,
     EOF,
 }
 
 pub struct Tokens<'a> {
-    pub tok: &'a [Token],
+    pub tok: &'a [Token<'a>],
     pub start: usize,
     pub end: usize,
 }
