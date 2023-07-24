@@ -4,7 +4,7 @@ use crate::lexer::token::*;
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{multispace0, digit1},
+    character::complete::{digit1, multispace0},
     combinator::map,
     multi::many0,
     sequence::delimited,
@@ -12,13 +12,19 @@ use nom::{
 };
 use std::iter::once;
 
-fn plus_operator<'a>(input: &'a str) -> IResult<&str, Token> {
-    map(tag("+"), |_| Token::Plus)(input)
+macro_rules! single_char_token_parser {
+    ($name:ident, $char:expr, $variant:expr) => {
+        fn $name<'a>(input: &'a str) -> IResult<&str, Token> {
+            map(tag($char), |_| $variant)(input)
+        }
+    };
 }
 
-fn minus_operator<'a>(input: &'a str) -> IResult<&str, Token> {
-    map(tag("-"), |_| Token::Minus)(input)
-}
+single_char_token_parser!(plus_operator, "+", Token::Plus);
+single_char_token_parser!(minus_operator, "-", Token::Minus);
+single_char_token_parser!(left_paren, "(", Token::LeftParen);
+single_char_token_parser!(right_paren, ")", Token::RightParen);
+
 
 fn num_token<'a>(input: &'a str) -> IResult<&str, Token> {
     map(digit1, Token::Num)(input)
@@ -29,27 +35,17 @@ fn lex_token(input: &str) -> IResult<&str, Token> {
         plus_operator,
         minus_operator,
         num_token,
+        left_paren,
+        right_paren,
     ))(input)
 }
-
-// fn lex_tokens(input: &str) -> IResult<&str, Vec<Token>> {
-//     many0(delimited(multispace0, lex_token, multispace0))(input)
-// }
 
 pub struct Lexer;
 
 impl Lexer {
     pub fn lex_tokens(input: &str) -> IResult<&str, Vec<Token>> {
         let tokens = many0(delimited(multispace0, lex_token, multispace0))(input);
-        tokens.map(|(slice, result)| {
-            (
-                slice,
-                result
-                    .into_iter()
-                    .chain(once(Token::EOF))
-                    .collect(),
-            )
-        })
+        tokens.map(|(slice, result)| (slice, result.into_iter().chain(once(Token::EOF)).collect()))
     }
 }
 
@@ -59,15 +55,18 @@ mod tests {
 
     #[test]
     fn test_lexer1() {
-        let input = "3+-2";
+        let input = "3+(-2)";
         let (_, result) = Lexer::lex_tokens(input).unwrap();
 
         let expected_results = vec![
             Token::Num("3"),
-            Token::Plus, 
+            Token::Plus,
+            Token::LeftParen,
             Token::Minus,
             Token::Num("2"),
-            Token::EOF];
+            Token::RightParen,
+            Token::EOF,
+        ];
 
         assert_eq!(result, expected_results);
     }

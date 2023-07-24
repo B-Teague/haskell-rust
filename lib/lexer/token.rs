@@ -1,6 +1,8 @@
 #[derive(Debug, PartialEq)]
 pub enum Token<'a> {
     Num(&'a str),
+    LeftParen,
+    RightParen,
     Plus,
     Minus,
     EOF,
