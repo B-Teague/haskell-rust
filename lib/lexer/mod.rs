@@ -7,12 +7,12 @@ use nom::{
     character::complete::{digit1, multispace0},
     combinator::map,
     multi::many0,
-    sequence::delimited,
+    sequence::{preceded, terminated},
     IResult,
 };
 use std::iter::once;
 
-macro_rules! single_char_token_parser {
+macro_rules! syntax {
     ($name:ident, $char:expr, $variant:expr) => {
         fn $name<'a>(input: &'a str) -> IResult<&str, Token> {
             map(tag($char), |_| $variant)(input)
@@ -20,10 +20,10 @@ macro_rules! single_char_token_parser {
     };
 }
 
-single_char_token_parser!(plus_operator, "+", Token::Plus);
-single_char_token_parser!(minus_operator, "-", Token::Minus);
-single_char_token_parser!(left_paren, "(", Token::LeftParen);
-single_char_token_parser!(right_paren, ")", Token::RightParen);
+syntax!(plus_operator, "+", Token::Plus);
+syntax!(minus_operator, "-", Token::Minus);
+syntax!(left_paren, "(", Token::LeftParen);
+syntax!(right_paren, ")", Token::RightParen);
 
 
 fn num_token<'a>(input: &'a str) -> IResult<&str, Token> {
@@ -44,7 +44,7 @@ pub struct Lexer;
 
 impl Lexer {
     pub fn lex_tokens(input: &str) -> IResult<&str, Vec<Token>> {
-        let tokens = many0(delimited(multispace0, lex_token, multispace0))(input);
+        let tokens = terminated(many0(preceded(multispace0, lex_token)), multispace0)(input);
         tokens.map(|(slice, result)| (slice, result.into_iter().chain(once(Token::EOF)).collect()))
     }
 }
@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_lexer1() {
-        let input = "3+(-2)";
+        let input = " 3\t+ (-2) \n";
         let (_, result) = Lexer::lex_tokens(input).unwrap();
 
         let expected_results = vec![
