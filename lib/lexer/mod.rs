@@ -12,19 +12,18 @@ use nom::{
 };
 use std::iter::once;
 
-macro_rules! syntax {
-    ($name:ident, $char:expr, $variant:expr) => {
-        fn $name<'a>(input: &'a str) -> IResult<&str, Token> {
-            map(tag($char), |_| $variant)(input)
-        }
-    };
+fn plus_operator<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(tag("+"), |_| Token::Plus)(input)
 }
-
-syntax!(plus_operator, "+", Token::Plus);
-syntax!(minus_operator, "-", Token::Minus);
-syntax!(left_paren, "(", Token::LeftParen);
-syntax!(right_paren, ")", Token::RightParen);
-
+fn minus_operator<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(tag("-"), |_| Token::Minus)(input)
+}
+fn left_paren<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(tag("("), |_| Token::LeftParen)(input)
+}
+fn right_paren<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(tag(")"), |_| Token::RightParen)(input)
+}
 
 fn num_token<'a>(input: &'a str) -> IResult<&str, Token> {
     map(digit1, Token::Num)(input)
