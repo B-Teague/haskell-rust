@@ -2,14 +2,33 @@ pub mod ast;
 
 use nom::{
     IResult,
-    combinator::{verify,map},
+    Err,
+    branch::alt,
     bytes::complete::take,
+    combinator::{verify,map},
     multi::many0,
     sequence::terminated,
-}
+    error::{Error,ErrorKind},
+};
 
 use crate::lexer::token::*;
 use crate::parser::ast::*;
+
+fn parse_literal(input: Tokens) -> IResult<Tokens, Literal> {
+    let (i1, t1) = take(1usize)(input)?;
+    if t1.tok.is_empty() {
+        Err(Err::Error(Error::new(input, ErrorKind::Tag)))
+    } else {
+        match t1.tok[0] {
+            Token::IntLiteral(name) => Ok((i1, Literal::IntLiteral(name))),
+            _ => Err(Err::Error(Error::new(input, ErrorKind::Tag))),
+        }
+    }
+}
+
+fn parse_lit_expr(input: Tokens) -> IResult<Tokens, Expr> {
+    map(parse_literal, Expr::LitExpr)(input)
+}
 
 fn parse_atom_expr(input: Tokens) -> IResult<Tokens, Expr> {
     alt((

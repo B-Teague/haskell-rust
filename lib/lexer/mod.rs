@@ -25,15 +25,15 @@ fn right_paren<'a>(input: &'a str) -> IResult<&str, Token> {
     map(tag(")"), |_| Token::RightParen)(input)
 }
 
-fn num_token<'a>(input: &'a str) -> IResult<&str, Token> {
-    map(digit1, Token::Num)(input)
+fn int_token<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(digit1, Token::IntLiteral)(input)
 }
 
 fn lex_token(input: &str) -> IResult<&str, Token> {
     alt((
         plus_operator,
         minus_operator,
-        num_token,
+        int_token,
         left_paren,
         right_paren,
     ))(input)
@@ -58,11 +58,11 @@ mod tests {
         let (_, result) = Lexer::lex_tokens(input).unwrap();
 
         let expected_results = vec![
-            Token::Num("3"),
+            Token::IntLiteral("3"),
             Token::Plus,
             Token::LeftParen,
             Token::Minus,
-            Token::Num("2"),
+            Token::IntLiteral("2"),
             Token::RightParen,
             Token::EOF,
         ];
