@@ -2,7 +2,8 @@ use std::iter::Enumerate;
 use nom::{
     InputIter,
     InputTake,
-    Needed
+    Needed, 
+    InputLength
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -15,7 +16,7 @@ pub enum Token<'a> {
     EOF,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Tokens<'a> {
     pub tok: &'a [Token<'a>],
     pub start: usize,
@@ -29,6 +30,13 @@ impl<'a> Tokens<'a> {
             start: 0,
             end: vec.len(),
         }
+    }
+}
+
+impl<'a> InputLength for Tokens<'a> {
+    #[inline]
+    fn input_len(&self) -> usize {
+        self.tok.len()
     }
 }
 
