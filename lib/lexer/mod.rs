@@ -69,4 +69,20 @@ mod tests {
 
         assert_eq!(result, expected_results);
     }
+
+    #[test]
+    fn test_lexer2() {
+        let input = "3--2";
+        let (_, result) = Lexer::lex_tokens(input).unwrap();
+
+        let expected_results = vec![
+            Token::IntLiteral("3"),
+            Token::Minus,
+            Token::Minus,
+            Token::IntLiteral("2"),
+            Token::EOF,
+        ];
+
+        assert_eq!(result, expected_results);
+    }
 }
