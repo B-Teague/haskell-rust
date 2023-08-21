@@ -16,31 +16,31 @@ use crate::lexer::token::*;
 use crate::parser::ast::*;
 
 fn eof_tag(tokens: Tokens) -> IResult<Tokens, Tokens> {
-    verify(take(1usize), |t: &Tokens| t.tok[0] == Token::EOF)(tokens)
+    verify(take(1usize), |t: &Tokens| t.tokens[0] == Token::EOF)(tokens)
 }
 
 fn plus_tag(tokens: Tokens) -> IResult<Tokens, Tokens> {
-    verify(take(1usize), |t: &Tokens| t.tok[0] == Token::Plus)(tokens)
+    verify(take(1usize), |t: &Tokens| t.tokens[0] == Token::Plus)(tokens)
 }
 
 fn minus_tag(tokens: Tokens) -> IResult<Tokens, Tokens> {
-    verify(take(1usize), |t: &Tokens| t.tok[0] == Token::Minus)(tokens)
+    verify(take(1usize), |t: &Tokens| t.tokens[0] == Token::Minus)(tokens)
 }
 
 fn left_paren_tag(tokens: Tokens) -> IResult<Tokens, Tokens> {
-    verify(take(1usize), |t: &Tokens| t.tok[0] == Token::LeftParen)(tokens)
+    verify(take(1usize), |t: &Tokens| t.tokens[0] == Token::LeftParen)(tokens)
 }
 
 fn right_paren_tag(tokens: Tokens) -> IResult<Tokens, Tokens> {
-    verify(take(1usize), |t: &Tokens| t.tok[0] == Token::RightParen)(tokens)
+    verify(take(1usize), |t: &Tokens| t.tokens[0] == Token::RightParen)(tokens)
 }
 
 fn parse_literal(input: Tokens) -> IResult<Tokens, Literal> {
     let (i1, t1) = take(1usize)(input)?;
-    if t1.tok.is_empty() {
+    if t1.tokens.is_empty() {
         Err(Err::Error(Error::new(input, ErrorKind::Tag)))
     } else {
-        match t1.tok[0] {
+        match t1.tokens[0] {
             Token::IntLiteral(name) => {
                 let parsed_int: Result<i64, _> = name.parse();
                 match parsed_int {
@@ -59,11 +59,11 @@ fn parse_lit_expr(input: Tokens) -> IResult<Tokens, Expr> {
 
 fn parse_prefix_expr(input: Tokens) -> IResult<Tokens, Expr> {
     let (i1, t1) = alt((plus_tag, minus_tag))(input)?;
-    if t1.tok.is_empty() {
+    if t1.tokens.is_empty() {
         Err(Err::Error(error_position!(input, ErrorKind::Tag)))
     } else {
         let (i2, e) = parse_atom_expr(i1)?;
-        match t1.tok[0].clone() {
+        match t1.tokens[0].clone() {
             Token::Plus => Ok((i2, Expr::PrefixExpr(Prefix::PrefixPlus, Box::new(e)))),
             Token::Minus => Ok((i2, Expr::PrefixExpr(Prefix::PrefixMinus, Box::new(e)))),
             _ => Err(Err::Error(error_position!(input, ErrorKind::Tag))),
@@ -93,10 +93,10 @@ fn infix_op(t: &Token) -> (Precedence, Option<Infix>) {
 
 fn parse_infix_expr(input: Tokens, left: Expr) -> IResult<Tokens, Expr> {
     let (i1, t1) = take(1usize)(input)?;
-    if t1.tok.is_empty() {
+    if t1.tokens.is_empty() {
         Err(Err::Error(error_position!(input, ErrorKind::Tag)))
     } else {
-        let next = &t1.tok[0];
+        let next = &t1.tokens[0];
         let (precedence, maybe_op) = infix_op(next);
         match maybe_op {
             None => Err(Err::Error(error_position!(input, ErrorKind::Tag))),
@@ -111,10 +111,10 @@ fn parse_infix_expr(input: Tokens, left: Expr) -> IResult<Tokens, Expr> {
 fn go_parse_pratt_expr(input: Tokens, precedence: Precedence, left: Expr) -> IResult<Tokens, Expr> {
     let (i1, t1) = take(1usize)(input)?;
 
-    if t1.tok.is_empty() {
+    if t1.tokens.is_empty() {
         Ok((i1, left))
     } else {
-        let preview = &t1.tok[0];
+        let preview = &t1.tokens[0];
         let p = infix_op(preview);
         match p {
             (ref peek_precedence, _) if precedence < *peek_precedence => {
@@ -189,9 +189,25 @@ mod tests {
     #[test]
     fn operator_precedence() {
         let input = "3 - 1 + 4 - 5";
-
         let input2 = "(((3 - 1) + 4) - 5)";
-
         compare_inputs(input, input2);
+    }
+
+
+    #[test]
+    fn minus_and_unary_operators() {
+        let input = "3--1";
+        assert_input_with_program(input, vec![
+            Stmt::ExprStmt(
+                Expr::InfixExpr(
+                    Infix::Minus,
+                    Box::new(Expr::LitExpr(Literal::IntLiteral(3))),
+                    Box::new(Expr::PrefixExpr(
+                        Prefix::PrefixMinus, 
+                        Box::new(Expr::LitExpr(Literal::IntLiteral(1)))
+                    ))
+                )
+            )
+        ]);
     }
 }

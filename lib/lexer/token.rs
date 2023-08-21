@@ -18,7 +18,7 @@ pub enum Token<'a> {
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Tokens<'a> {
-    pub tok: &'a [Token<'a>],
+    pub tokens: &'a [Token<'a>],
     pub start: usize,
     pub end: usize,
 }
@@ -26,7 +26,7 @@ pub struct Tokens<'a> {
 impl<'a> Tokens<'a> {
     pub fn new(vec: &'a [Token]) -> Self {
         Tokens {
-            tok: vec,
+            tokens: vec,
             start: 0,
             end: vec.len(),
         }
@@ -36,7 +36,7 @@ impl<'a> Tokens<'a> {
 impl<'a> InputLength for Tokens<'a> {
     #[inline]
     fn input_len(&self) -> usize {
-        self.tok.len()
+        self.tokens.len()
     }
 }
 
@@ -47,22 +47,22 @@ impl<'a> InputIter for Tokens<'a> {
 
     #[inline]
     fn iter_indices(&self) -> Enumerate<::std::slice::Iter<'a, Token<'a>>> {
-        self.tok.iter().enumerate()
+        self.tokens.iter().enumerate()
     }
     #[inline]
     fn iter_elements(&self) -> ::std::slice::Iter<'a, Token<'a>> {
-        self.tok.iter()
+        self.tokens.iter()
     }
     #[inline]
     fn position<P>(&self, predicate: P) -> Option<usize>
     where
         P: Fn(Self::Item) -> bool,
     {
-        self.tok.iter().position(predicate)
+        self.tokens.iter().position(predicate)
     }
     #[inline]
     fn slice_index(&self, count: usize) -> Result<usize, Needed> {
-        if self.tok.len() >= count {
+        if self.tokens.len() >= count {
             Ok(count)
         } else {
             Err(Needed::Unknown)
@@ -74,7 +74,7 @@ impl<'a> InputTake for Tokens<'a> {
     #[inline]
     fn take(&self, count: usize) -> Self {
         Tokens {
-            tok: &self.tok[0..count],
+            tokens: &self.tokens[0..count],
             start: 0,
             end: count,
         }
@@ -82,14 +82,14 @@ impl<'a> InputTake for Tokens<'a> {
 
     #[inline]
     fn take_split(&self, count: usize) -> (Self, Self) {
-        let (prefix, suffix) = self.tok.split_at(count);
+        let (prefix, suffix) = self.tokens.split_at(count);
         let first = Tokens {
-            tok: prefix,
+            tokens: prefix,
             start: 0,
             end: prefix.len(),
         };
         let second = Tokens {
-            tok: suffix,
+            tokens: suffix,
             start: 0,
             end: suffix.len(),
         };
