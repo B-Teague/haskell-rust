@@ -18,6 +18,15 @@ fn plus_operator<'a>(input: &'a str) -> IResult<&str, Token> {
 fn minus_operator<'a>(input: &'a str) -> IResult<&str, Token> {
     map(tag("-"), |_| Token::Minus)(input)
 }
+fn multiply_operator<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(tag("*"), |_| Token::Multiply)(input)
+}
+fn divide_operator<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(tag("/"), |_| Token::Divide)(input)
+}
+fn power_operator<'a>(input: &'a str) -> IResult<&str, Token> {
+    map(tag("^"), |_| Token::Power)(input)
+}
 fn left_paren<'a>(input: &'a str) -> IResult<&str, Token> {
     map(tag("("), |_| Token::LeftParen)(input)
 }
@@ -33,6 +42,9 @@ fn lex_token(input: &str) -> IResult<&str, Token> {
     alt((
         plus_operator,
         minus_operator,
+        multiply_operator,
+        divide_operator,
+        power_operator,
         int_token,
         left_paren,
         right_paren,
@@ -80,6 +92,27 @@ mod tests {
             Token::Minus,
             Token::Minus,
             Token::IntLiteral("2"),
+            Token::EOF,
+        ];
+
+        assert_eq!(result, expected_results);
+    }
+
+    #[test]
+    fn test_lexer3() {
+        let input = "3+2^3^4/12";
+        let (_, result) = Lexer::lex_tokens(input).unwrap();
+
+        let expected_results = vec![
+            Token::IntLiteral("3"),
+            Token::Plus,
+            Token::IntLiteral("2"),
+            Token::Power,
+            Token::IntLiteral("3"),
+            Token::Power,
+            Token::IntLiteral("4"),
+            Token::Divide,
+            Token::IntLiteral("12"),
             Token::EOF,
         ];
 

@@ -13,6 +13,9 @@ pub enum Token<'a> {
     RightParen,
     Plus,
     Minus,
+    Multiply,
+    Divide,
+    Power,
     EOF,
 }
 

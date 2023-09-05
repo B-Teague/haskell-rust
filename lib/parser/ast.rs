@@ -7,30 +7,35 @@ pub enum Stmt {
 
 #[derive(PartialEq, Debug)]
 pub enum Expr {
-    LitExpr(Literal),
-    PrefixExpr(Prefix, Box<Expr>),
-    InfixExpr(Infix, Box<Expr>, Box<Expr>),
+    Literal(Literal),
+    Prefix(Prefix, Box<Expr>),
+    Infix(Box<Expr>, Infix, Box<Expr>),
 }
 
 #[derive(PartialEq, Debug)]
 pub enum Literal {
-    IntLiteral(i64),
+    Int(i64),
 }
 
 #[derive(PartialEq, Debug)]
 pub enum Prefix {
-    PrefixPlus,
-    PrefixMinus,
+    Positive,
+    Negative,
 }
 
 #[derive(PartialEq, Debug)]
 pub enum Infix {
     Plus,
     Minus,
+    Multiply,
+    Divide,
+    Power,
 }
 
 #[derive(PartialEq, PartialOrd, Debug)]
 pub enum Precedence {
     PLowest,
     PSum,
+    PProduct,
+    PPower,
 }

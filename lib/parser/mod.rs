@@ -1,15 +1,14 @@
 pub mod ast;
 
 use nom::{
-    IResult,
-    Err,
-    error_position,
     branch::alt,
     bytes::complete::take,
-    combinator::{verify,map},
+    combinator::{map, verify},
+    error::{Error, ErrorKind},
+    error_position,
     multi::many0,
-    sequence::{terminated, delimited},
-    error::{Error,ErrorKind},
+    sequence::{delimited, terminated},
+    Err, IResult,
 };
 
 use crate::lexer::token::*;
@@ -44,17 +43,17 @@ fn parse_literal(input: Tokens) -> IResult<Tokens, Literal> {
             Token::IntLiteral(name) => {
                 let parsed_int: Result<i64, _> = name.parse();
                 match parsed_int {
-                    Ok(num) => Ok((i1, Literal::IntLiteral(num))),
-                    Err(_) => Err(Err::Error(Error::new(input, ErrorKind::Tag)))
+                    Ok(num) => Ok((i1, Literal::Int(num))),
+                    Err(_) => Err(Err::Error(Error::new(input, ErrorKind::Tag))),
                 }
-            },
+            }
             _ => Err(Err::Error(Error::new(input, ErrorKind::Tag))),
         }
     }
 }
 
 fn parse_lit_expr(input: Tokens) -> IResult<Tokens, Expr> {
-    map(parse_literal, Expr::LitExpr)(input)
+    map(parse_literal, Expr::Literal)(input)
 }
 
 fn parse_prefix_expr(input: Tokens) -> IResult<Tokens, Expr> {
@@ -64,8 +63,8 @@ fn parse_prefix_expr(input: Tokens) -> IResult<Tokens, Expr> {
     } else {
         let (i2, e) = parse_atom_expr(i1)?;
         match t1.tokens[0].clone() {
-            Token::Plus => Ok((i2, Expr::PrefixExpr(Prefix::PrefixPlus, Box::new(e)))),
-            Token::Minus => Ok((i2, Expr::PrefixExpr(Prefix::PrefixMinus, Box::new(e)))),
+            Token::Plus => Ok((i2, Expr::Prefix(Prefix::Positive, Box::new(e)))),
+            Token::Minus => Ok((i2, Expr::Prefix(Prefix::Negative, Box::new(e)))),
             _ => Err(Err::Error(error_position!(input, ErrorKind::Tag))),
         }
     }
@@ -76,11 +75,7 @@ fn parse_paren_expr(input: Tokens) -> IResult<Tokens, Expr> {
 }
 
 fn parse_atom_expr(input: Tokens) -> IResult<Tokens, Expr> {
-    alt((
-        parse_lit_expr,
-        parse_prefix_expr,
-        parse_paren_expr,
-    ))(input)
+    alt((parse_lit_expr, parse_prefix_expr, parse_paren_expr))(input)
 }
 
 fn infix_op(t: &Token) -> (Precedence, Option<Infix>) {
@@ -102,7 +97,7 @@ fn parse_infix_expr(input: Tokens, left: Expr) -> IResult<Tokens, Expr> {
             None => Err(Err::Error(error_position!(input, ErrorKind::Tag))),
             Some(op) => {
                 let (i2, right) = parse_pratt_expr(i1, precedence)?;
-                Ok((i2, Expr::InfixExpr(op, Box::new(left), Box::new(right))))
+                Ok((i2, Expr::Infix(Box::new(left), op, Box::new(right))))
             }
         }
     }
@@ -136,10 +131,7 @@ fn parse_expr(input: Tokens) -> IResult<Tokens, Expr> {
 }
 
 fn parse_expr_stmt(input: Tokens) -> IResult<Tokens, Stmt> {
-    map(parse_expr, |expr| {
-        Stmt::ExprStmt(expr)
-    })(input)
-    
+    map(parse_expr, |expr| Stmt::ExprStmt(expr))(input)
 }
 
 fn parse_program(input: Tokens) -> IResult<Tokens, Program> {
@@ -193,21 +185,33 @@ mod tests {
         compare_inputs(input, input2);
     }
 
-
     #[test]
     fn minus_and_unary_operators() {
         let input = "3--1";
-        assert_input_with_program(input, vec![
-            Stmt::ExprStmt(
-                Expr::InfixExpr(
-                    Infix::Minus,
-                    Box::new(Expr::LitExpr(Literal::IntLiteral(3))),
-                    Box::new(Expr::PrefixExpr(
-                        Prefix::PrefixMinus, 
-                        Box::new(Expr::LitExpr(Literal::IntLiteral(1)))
-                    ))
-                )
-            )
-        ]);
+        assert_input_with_program(
+            input,
+            vec![Stmt::ExprStmt(Expr::Infix(
+                Box::new(Expr::Literal(Literal::Int(3))),
+                Infix::Minus,
+                Box::new(Expr::Prefix(
+                    Prefix::Negative,
+                    Box::new(Expr::Literal(Literal::Int(1))),
+                )),
+            ))],
+        );
+    }
+
+    #[test]
+    fn minus_and_unary_operators2() {
+        let input = "3+-5";
+        let input2 = "(3 + (- 5))";
+        compare_inputs(input, input2);
+    }
+
+    #[test]
+    fn too_many_operators() {
+        let input = "3+++5";
+        let input2 = "(3 + (+ (+ 5)))";
+        compare_inputs(input, input2);
     }
 }
