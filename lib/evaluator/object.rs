@@ -41,9 +41,9 @@ impl fmt::Display for Object {
             Object::Integer(ref i) => write!(f, "{}", i),
             Object::Boolean(ref b) => {
                 if *b {
-                    write!(f, "true")
+                    write!(f, "True")
                 } else {
-                    write!(f, "false")
+                    write!(f, "False")
                 }
             }
             Object::String(ref s) => write!(f, "{}", s),

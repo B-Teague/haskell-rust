@@ -128,8 +128,8 @@ fn lex_reserved_ident(input: &[u8]) -> IResult<&[u8], Token> {
                 "if" => Token::If,
                 "else" => Token::Else,
                 "return" => Token::Return,
-                "true" => Token::BoolLiteral(true),
-                "false" => Token::BoolLiteral(false),
+                "True" => Token::BoolLiteral(true),
+                "False" => Token::BoolLiteral(false),
                 _ => Token::Ident(syntax.to_string()),
             })
         },
