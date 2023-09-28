@@ -124,7 +124,7 @@ fn main() -> rustyline::Result<()> {
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
-                let lex_tokens = Lexer::lex_tokens(line.as_bytes());
+                let lex_tokens = Lexer::lex_tokens(&line);
                 match lex_tokens {
                     Ok((_, r)) => {
                         let tokens = Tokens::new(&r);

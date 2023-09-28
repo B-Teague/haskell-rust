@@ -3,7 +3,7 @@ use nom::{
     branch::*,
     bytes::complete::{tag, take},
     character::complete::{alpha1, alphanumeric1, char, digit1, multispace0},
-    combinator::{map, map_res, recognize, value},
+    combinator::{map, recognize, value},
     multi::many0,
     sequence::{delimited, preceded, pair},
 };
@@ -89,9 +89,9 @@ pub fn lex_punctuations(input: &str) -> IResult<&str, Token> {
 fn string(input: &str) -> IResult<&str, String> {
     delimited(
         char('"'),
-        map_res(preceded(char('\\'), char('"')), |s: &str| {
+        map(preceded(char('\\'), char('"')), |c| {
             // Handle escaped double quotes
-            Ok(s.to_string())
+            c.to_string()
         }),
         char('"'),
     )(input)
@@ -151,8 +151,8 @@ fn lex_tokens(input: &str) -> IResult<&str, Vec<Token>> {
 pub struct Lexer;
 
 impl Lexer {
-    pub fn lex_tokens(bytes: &str) -> IResult<&str, Vec<Token>> {
-        lex_tokens(bytes)
+    pub fn lex_tokens(input: &str) -> IResult<&str, Vec<Token>> {
+        lex_tokens(input)
             .map(|(slice, result)| (slice, [&result[..], &vec![Token::EOF][..]].concat()))
     }
 }

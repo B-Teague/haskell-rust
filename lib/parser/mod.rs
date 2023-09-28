@@ -328,14 +328,14 @@ mod tests {
     use super::*;
     use crate::lexer::*;
 
-    fn assert_input_with_program(input: &[u8], expected_results: Program) {
+    fn assert_input_with_program(input: &str, expected_results: Program) {
         let (_, r) = Lexer::lex_tokens(input).unwrap();
         let tokens = Tokens::new(&r);
         let (_, result) = Parser::parse_tokens(tokens).unwrap();
         assert_eq!(result, expected_results);
     }
 
-    fn compare_inputs(input: &[u8], input2: &[u8]) {
+    fn compare_inputs(input: &str, input2: &str) {
         let (_, r) = Lexer::lex_tokens(input).unwrap();
         let tokens = Tokens::new(&r);
         let (_, result) = Parser::parse_tokens(tokens).unwrap();
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     fn empty() {
-        assert_input_with_program(&b""[..], vec![]);
+        assert_input_with_program("", vec![]);
     }
 
     #[test]
@@ -358,8 +358,7 @@ mod tests {
              let y = 10;\
              let foobar = 838383;\
              let boo = true;\
-            "
-        .as_bytes();
+            ";
 
         let program: Program = vec![
             Stmt::LetStmt(Ident("x".to_owned()), Expr::LitExpr(Literal::IntLiteral(5))),
@@ -386,8 +385,7 @@ mod tests {
              return 10;\
              return 838383;\
              return true;\
-            "
-        .as_bytes();
+            ";
 
         let program: Program = vec![
             Stmt::ReturnStmt(Expr::LitExpr(Literal::IntLiteral(5))),
@@ -406,8 +404,7 @@ mod tests {
              15;\
              let y = 20;\
              return false;\
-            "
-        .as_bytes();
+            ";
 
         let program: Program = vec![
             Stmt::LetStmt(Ident("x".to_owned()), Expr::LitExpr(Literal::IntLiteral(5))),
@@ -427,8 +424,7 @@ mod tests {
     fn identifier() {
         let input = "foobar;\
              foobar\
-            "
-        .as_bytes();
+            ";
 
         let program: Program = vec![
             Stmt::ExprStmt(Expr::IdentExpr(Ident("foobar".to_owned()))),
@@ -443,8 +439,7 @@ mod tests {
         let input = "-foobar;\
              +10\
              !true\
-            "
-        .as_bytes();
+            ";
 
         let program: Program = vec![
             Stmt::ExprStmt(Expr::PrefixExpr(
@@ -469,8 +464,7 @@ mod tests {
         let input = "-(foobar);\
              (+(10));\
              (((!true)));\
-            "
-        .as_bytes();
+            ";
 
         let program: Program = vec![
             Stmt::ExprStmt(Expr::PrefixExpr(
@@ -492,7 +486,7 @@ mod tests {
 
     #[test]
     fn infix_expr() {
-        let input = "10 + 20".as_bytes();
+        let input = "10 + 20";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::InfixExpr(
             Infix::Plus,
@@ -502,7 +496,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = "10 * 20".as_bytes();
+        let input = "10 * 20";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::InfixExpr(
             Infix::Multiply,
@@ -512,13 +506,13 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = "10 + 5 / -20 - (x + x)".as_bytes();
+        let input = "10 + 5 / -20 - (x + x)";
 
-        let input2 = "10 + (5 / (-20)) - (x + x)".as_bytes();
+        let input2 = "10 + (5 / (-20)) - (x + x)";
 
         compare_inputs(input, input2);
 
-        let input = "10 + 5 / -20 - (x + x)".as_bytes();
+        let input = "10 + 5 / -20 - (x + x)";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::InfixExpr(
             Infix::Minus,
@@ -546,76 +540,76 @@ mod tests {
 
     #[test]
     fn op_precedence() {
-        let input = "!-a".as_bytes();
+        let input = "!-a";
 
-        let input2 = "(!(-a))".as_bytes();
-
-        compare_inputs(input, input2);
-
-        let input = "a + b + c".as_bytes();
-
-        let input2 = "((a + b) + c)".as_bytes();
+        let input2 = "(!(-a))";
 
         compare_inputs(input, input2);
 
-        let input = "a + b - c".as_bytes();
+        let input = "a + b + c";
 
-        let input2 = "((a + b) - c)".as_bytes();
-
-        compare_inputs(input, input2);
-
-        let input = "a * b * c".as_bytes();
-
-        let input2 = "((a * b) * c)".as_bytes();
+        let input2 = "((a + b) + c)";
 
         compare_inputs(input, input2);
 
-        let input = "a * b / c".as_bytes();
+        let input = "a + b - c";
 
-        let input2 = "((a * b) / c)".as_bytes();
-
-        compare_inputs(input, input2);
-
-        let input = "a + b / c".as_bytes();
-
-        let input2 = "(a + (b / c))".as_bytes();
+        let input2 = "((a + b) - c)";
 
         compare_inputs(input, input2);
 
-        let input = "a + b * c + d / e - f".as_bytes();
+        let input = "a * b * c";
 
-        let input2 = "(((a + (b * c)) + (d / e)) - f)".as_bytes();
-
-        compare_inputs(input, input2);
-
-        let input = "3 + 4; -5 * 5".as_bytes();
-
-        let input2 = "(3 + 4);((-5) * 5)".as_bytes();
+        let input2 = "((a * b) * c)";
 
         compare_inputs(input, input2);
 
-        let input = "5 > 4 == 3 < 4".as_bytes();
+        let input = "a * b / c";
 
-        let input2 = "((5 > 4) == (3 < 4))".as_bytes();
-
-        compare_inputs(input, input2);
-
-        let input = "5 < 4 != 3 > 4".as_bytes();
-
-        let input2 = "((5 < 4) != (3 > 4))".as_bytes();
+        let input2 = "((a * b) / c)";
 
         compare_inputs(input, input2);
 
-        let input = "3 + 4 * 5 == 3 * 1 + 4 * 5".as_bytes();
+        let input = "a + b / c";
 
-        let input2 = "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))".as_bytes();
+        let input2 = "(a + (b / c))";
+
+        compare_inputs(input, input2);
+
+        let input = "a + b * c + d / e - f";
+
+        let input2 = "(((a + (b * c)) + (d / e)) - f)";
+
+        compare_inputs(input, input2);
+
+        let input = "3 + 4; -5 * 5";
+
+        let input2 = "(3 + 4);((-5) * 5)";
+
+        compare_inputs(input, input2);
+
+        let input = "5 > 4 == 3 < 4";
+
+        let input2 = "((5 > 4) == (3 < 4))";
+
+        compare_inputs(input, input2);
+
+        let input = "5 < 4 != 3 > 4";
+
+        let input2 = "((5 < 4) != (3 > 4))";
+
+        compare_inputs(input, input2);
+
+        let input = "3 + 4 * 5 == 3 * 1 + 4 * 5";
+
+        let input2 = "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))";
 
         compare_inputs(input, input2);
     }
 
     #[test]
     fn if_expr() {
-        let input = "if (x < y) { x }".as_bytes();
+        let input = "if (x < y) { x }";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::IfExpr {
             cond: Box::new(Expr::InfixExpr(
@@ -629,7 +623,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = "if (x < y) { x } else { y }".as_bytes();
+        let input = "if (x < y) { x } else { y }";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::IfExpr {
             cond: Box::new(Expr::InfixExpr(
@@ -650,7 +644,7 @@ mod tests {
                 return foobar + barfoo;\
             }\
             "
-        .as_bytes();
+        ;
 
         let program: Program = vec![Stmt::ExprStmt(Expr::FnExpr {
             params: vec![],
@@ -667,7 +661,7 @@ mod tests {
                 return x + y;\
             }\
             "
-        .as_bytes();
+        ;
 
         let program: Program = vec![Stmt::ExprStmt(Expr::FnExpr {
             params: vec![Ident("x".to_owned()), Ident("y".to_owned())],
@@ -684,7 +678,7 @@ mod tests {
                 return fn (x, y, z, zz) { return x >= y; };
              }
             "
-        .as_bytes();
+        ;
 
         let program: Program = vec![Stmt::ExprStmt(Expr::FnExpr {
             params: vec![],
@@ -712,7 +706,7 @@ mod tests {
              add(a, b, 1, 2 * 3, other(4 + 5), add(6, 7 * 8));\
              fn(a, b) { return a + b; }(1, 2);\
             "
-        .as_bytes();
+        ;
 
         let program: Program = vec![
             Stmt::ExprStmt(Expr::CallExpr {
@@ -775,7 +769,7 @@ mod tests {
 
     #[test]
     fn strings() {
-        let input = &b"\"foobar\""[..];
+        let input = "\"foobar\"";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::LitExpr(Literal::StringLiteral(
             "foobar".to_owned(),
@@ -783,7 +777,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"\"foo bar\""[..];
+        let input = "\"foo bar\"";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::LitExpr(Literal::StringLiteral(
             "foo bar".to_owned(),
@@ -791,7 +785,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"\"foo\nbar\""[..];
+        let input = "\"foo\nbar\"";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::LitExpr(Literal::StringLiteral(
             "foo\nbar".to_owned(),
@@ -799,7 +793,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"\"foo\tbar\""[..];
+        let input = "\"foo\tbar\"";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::LitExpr(Literal::StringLiteral(
             "foo\tbar".to_owned(),
@@ -807,7 +801,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"\"foo\\\"bar\""[..];
+        let input = "\"foo\\\"bar\"";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::LitExpr(Literal::StringLiteral(
             "foo\"bar".to_owned(),
@@ -818,7 +812,7 @@ mod tests {
 
     #[test]
     fn arrays() {
-        let input = &b"[1, 2 * 2, 3 + 3]"[..];
+        let input = "[1, 2 * 2, 3 + 3]";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::ArrayExpr(vec![
             Expr::LitExpr(Literal::IntLiteral(1)),
@@ -836,7 +830,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"myArray[1 + 1]"[..];
+        let input = "myArray[1 + 1]";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::IndexExpr {
             array: Box::new(Expr::IdentExpr(Ident("myArray".to_owned()))),
@@ -852,28 +846,28 @@ mod tests {
 
     #[test]
     fn array_precedence() {
-        let input = "a * [1, 2, 3, 4][b * c] * d".as_bytes();
+        let input = "a * [1, 2, 3, 4][b * c] * d";
 
-        let input2 = "((a * ([1, 2, 3, 4][b * c])) * d)".as_bytes();
+        let input2 = "((a * ([1, 2, 3, 4][b * c])) * d)";
 
         compare_inputs(input, input2);
 
-        let input = "add(a * b[2], b[1], 2 * [1, 2][1])".as_bytes();
+        let input = "add(a * b[2], b[1], 2 * [1, 2][1])";
 
-        let input2 = "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))".as_bytes();
+        let input2 = "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))";
 
         compare_inputs(input, input2);
     }
 
     #[test]
     fn hash() {
-        let input = &b"{}"[..];
+        let input = "{}";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::HashExpr(vec![]))];
 
         assert_input_with_program(input, program);
 
-        let input = &b"{\"one\": 1, \"two\": 2, \"three\": 3}"[..];
+        let input = "{\"one\": 1, \"two\": 2, \"three\": 3}";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::HashExpr(vec![
             (
@@ -892,7 +886,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"{4: 1, 5: 2, 6: 3}"[..];
+        let input = "{4: 1, 5: 2, 6: 3}";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::HashExpr(vec![
             (
@@ -911,7 +905,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"{true: 1, false: 2}"[..];
+        let input = "{true: 1, false: 2}";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::HashExpr(vec![
             (
@@ -926,7 +920,7 @@ mod tests {
 
         assert_input_with_program(input, program);
 
-        let input = &b"{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15/5}"[..];
+        let input = "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15/5}";
 
         let program: Program = vec![Stmt::ExprStmt(Expr::HashExpr(vec![
             (

@@ -19,7 +19,7 @@ fn read_file(file_path: String) -> Result<String, ::std::io::Error> {
 fn test_example_hash() {
     let code_string = read_file("examples/map-reduce.mk".to_owned()).ok().unwrap();
     let mut evaluator = Evaluator::new();
-    let (_, lex_tokens) = Lexer::lex_tokens(code_string.as_bytes()).unwrap();
+    let (_, lex_tokens) = Lexer::lex_tokens(&code_string).unwrap();
     let tokens = Tokens::new(&lex_tokens);
     let (_, program) = Parser::parse_tokens(tokens).unwrap();
     let eval = evaluator.eval_program(program);
@@ -30,7 +30,7 @@ fn test_example_hash() {
 fn test_reduce() {
     let code_string = read_file("examples/hash.mk".to_owned()).ok().unwrap();
     let mut evaluator = Evaluator::new();
-    let (_, lex_tokens) = Lexer::lex_tokens(code_string.as_bytes()).unwrap();
+    let (_, lex_tokens) = Lexer::lex_tokens(&code_string).unwrap();
     let tokens = Tokens::new(&lex_tokens);
     let (_, program) = Parser::parse_tokens(tokens).unwrap();
     let eval = evaluator.eval_program(program);

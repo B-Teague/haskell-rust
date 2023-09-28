@@ -30,7 +30,7 @@ fn main() {
 
     if let Some(code_string) = code_string {
         let mut evaluator = Evaluator::new();
-        let lex_tokens = Lexer::lex_tokens(code_string.as_bytes());
+        let lex_tokens = Lexer::lex_tokens(&code_string);
         match lex_tokens {
             Ok((_, r)) => {
                 let tokens = Tokens::new(&r);
