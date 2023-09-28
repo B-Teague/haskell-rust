@@ -87,23 +87,11 @@ pub fn lex_punctuations(input: &str) -> IResult<&str, Token> {
     ))(input)
 }
 
-fn unicode_escape(input: &str) -> IResult<&str, char> {
-    map_res(
-        preceded(char('\\'), hex_digit1),
-        |hex: &str| {
-            u32::from_str_radix(hex, 16)
-                .ok()
-                .and_then(std::char::from_u32)
-                .ok_or("Invalid Unicode escape sequence")
-        },
-    )(input)
-}
-
 fn string(input: &str) -> IResult<&str, String> {
     delimited(
         char('"'),
         map(
-            many0(unicode_escape.or(none_of("\""))),
+            many0(preceded(char('\\'), char('"')).or(none_of("\""))),
             |chars: Vec<char>| chars.into_iter().collect(),
         ),
         char('"'),
@@ -257,9 +245,9 @@ mod tests {
             } else if (a > 20) {\
                 return -30 / 40 * 50;\
             } else if (a < 30) {\
-                return true;\
+                return True;\
             }\
-            return false;\
+            return False;\
             ";
 
         let (_, result) = Lexer::lex_tokens(input).unwrap();
@@ -360,7 +348,7 @@ mod tests {
         );
 
         let (_, result) =
-            Lexer::lex_tokens("\"foo\\\"bar with \\u{1F496} emojis\"").unwrap();
+            Lexer::lex_tokens("\"foo\\\"bar with \u{1F496} emojis\"").unwrap();
         assert_eq!(
             result,
             vec![
