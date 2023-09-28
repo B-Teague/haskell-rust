@@ -1,9 +1,10 @@
 use nom::{
     IResult,
+    Parser,
     branch::*,
     bytes::complete::{tag, take},
-    character::complete::{alpha1, alphanumeric1, char, digit1, multispace0},
-    combinator::{map, recognize, value},
+    character::complete::{alpha1, alphanumeric1, char, digit1, hex_digit1, multispace0, none_of},
+    combinator::{map, map_res, recognize, value},
     multi::many0,
     sequence::{delimited, preceded, pair},
 };
@@ -86,13 +87,25 @@ pub fn lex_punctuations(input: &str) -> IResult<&str, Token> {
     ))(input)
 }
 
+fn unicode_escape(input: &str) -> IResult<&str, char> {
+    map_res(
+        preceded(char('\\'), hex_digit1),
+        |hex: &str| {
+            u32::from_str_radix(hex, 16)
+                .ok()
+                .and_then(std::char::from_u32)
+                .ok_or("Invalid Unicode escape sequence")
+        },
+    )(input)
+}
+
 fn string(input: &str) -> IResult<&str, String> {
     delimited(
         char('"'),
-        map(preceded(char('\\'), char('"')), |c| {
-            // Handle escaped double quotes
-            c.to_string()
-        }),
+        map(
+            many0(unicode_escape.or(none_of("\""))),
+            |chars: Vec<char>| chars.into_iter().collect(),
+        ),
         char('"'),
     )(input)
 }
