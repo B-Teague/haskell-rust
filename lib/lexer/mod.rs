@@ -3,8 +3,8 @@ use nom::{
     Parser,
     branch::*,
     bytes::complete::{tag, take},
-    character::complete::{alpha1, alphanumeric1, char, digit1, hex_digit1, multispace0, none_of},
-    combinator::{map, map_res, recognize, value},
+    character::complete::{alpha1, alphanumeric1, char, digit1, multispace0, none_of},
+    combinator::{map, recognize, value},
     multi::many0,
     sequence::{delimited, preceded, pair},
 };
@@ -110,8 +110,8 @@ fn lex_reserved_ident(input: &str) -> IResult<&str, Token> {
         value(Token::If, tag("if")),
         value(Token::Else, tag("else")),
         value(Token::Return, tag("return")),
-        value(Token::BoolLiteral(true), tag("True")),
-        value(Token::BoolLiteral(false), tag("False")),
+        value(Token::BoolLiteral(true), tag("true")),
+        value(Token::BoolLiteral(false), tag("false")),
         map(
             recognize(pair(
                 alt((alpha1, tag("_"))),
@@ -245,9 +245,9 @@ mod tests {
             } else if (a > 20) {\
                 return -30 / 40 * 50;\
             } else if (a < 30) {\
-                return True;\
+                return true;\
             }\
-            return False;\
+            return false;\
             ";
 
         let (_, result) = Lexer::lex_tokens(input).unwrap();
