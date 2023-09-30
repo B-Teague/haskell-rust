@@ -8,14 +8,14 @@ pub enum Token {
     EOF,
     // identifier and literals
     Ident(String),
-    TypeIdent(String),
     StringLiteral(String),
-    CharLiteral(char),
     IntLiteral(i64),
-    FloatLiteral(f64),
     BoolLiteral(bool),
+    // statements
+    Assign,
+    If,
+    Else,
     // operators
-    Range,
     Plus,
     Minus,
     Divide,
@@ -26,21 +26,21 @@ pub enum Token {
     LessThanEqual,
     GreaterThan,
     LessThan,
-    Not, // !
-    Arrow, // ->
-    Colon,
-    DoubleColon, // ::
+    Not,
+    // reserved words
+    Function,
+    Let,
+    Return,
     // punctuations
     Comma,
+    Colon,
+    SemiColon,
     LParen,
     RParen,
     LBrace,
     RBrace,
     LBracket,
     RBracket,
-    //reserved words
-    Int,
-    Char,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
